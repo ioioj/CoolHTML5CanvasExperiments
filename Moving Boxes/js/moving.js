@@ -5,22 +5,14 @@ var boxWidth, boxHeight
 boxWidth = boxHeight = 50
 //Mouse moving events
 var mouseDown = false, dragBox, dragX, dragY, boxMove = 1, boxShift = 5
-var black = "rgb(0,0,0)"
+var black = "rgb(0,0,0)" , green="#00ff00", blue = "#0000ff"
+var terminalWidth, terminalHeight
+terminalWidth = terminalHeight = 4
 
 //
 var direction = {input:0, output: 1}
 
 var boxes = []
-function addBoxToCanvas(box){
-	context.fillStyle = box.fill
-	context.fillRect(box.x,box.y,box.w,box.h)
-	if(box.stroke != null){
-		context.strokeStyle = box.stroke
-		context.lineWidth = 3
-		context.strokeRect(box.x,box.y,box.w,box.h)
-	}
-	invalidate()
-}
 
 function Terminal(box, direction, index){
 	this.box = box
@@ -28,6 +20,7 @@ function Terminal(box, direction, index){
 	this.direction = direction
 	this.x
 	this.y
+	this.fill = green
 }
 Terminal.prototype.init = function(){
 	if(this.index){
@@ -41,9 +34,8 @@ Terminal.prototype.init = function(){
 	
 }
 Terminal.prototype.draw = function(){
-	context.beginPath()
-	context.arc(this.x, this.y,3, 0, 2*Math.PI, false)
-	context.closePath()
+	context.fillStyle = this.fill
+	context.fillRect(this.x-terminalWidth/2, this.y-terminalHeight/2, terminalWidth, terminalHeight)
 }
 
 
@@ -58,8 +50,9 @@ function Box(x,y,w,h, fill,stroke){
 	else
 		this.stroke = stroke
 	this.terminals = []
-	this.inputTerminals = 0
-	this.outputTerminals = 0
+	this.inputTerminalsCount = 0
+	this.outputTerminalsCount = 0
+	this.terminalReInit = true
 }
 Box.prototype.draw = function(){
 	context.fillStyle = this.fill
@@ -69,26 +62,46 @@ Box.prototype.draw = function(){
 		context.lineWidth = 3
 		context.strokeRect(this.x,this.y,this.w,this.h)
 	}
-	for(i=0;i<this.terminals.length;i+=1){
+	if(this.terminalReInit){
+		this.terminalReInit =false
+		this.initTerminals()
+	}//now make a call to init terminal positions
+	for(var i=0;i<this.terminals.length;i+=1){
 		this.terminals[i].draw()
 	}
-	invalidate()
+}
+Box.prototype.initTerminals = function(){
+	inputTermSpacing = boxHeight/(this.inputTerminalsCount+1)
+	outputTermSpacing = boxHeight/(this.outputTerminalsCount+1)
+	//go through inputterminals
+	for(var i = 0; i<this.inputTerminalsCount;i+=1){
+		this.terminals[i].x = this.x
+		this.terminals[i].y = this.y + inputTermSpacing*(i+1)		
+	}
+	//output terminals
+	for(var i =this.inputTerminalsCount;i<this.terminals.length;i+=1){
+		this.terminals[i].x = this.x+boxWidth
+		this.terminals[i].y = this.y+outputTermSpacing*(i-this.inputTerminalsCount+1)
+	}		
+
 }
 Box.prototype.addTerminal = function(terminal){
 	this.terminals.push(terminal)
 	if(terminal.direction == direction.input)
-		this.inputTerminals +=1
+		this.inputTerminalsCount +=1
 	else
-		this.outputTerminals +=1
-	terminal.init()
+		this.outputTerminalsCount +=1
 }
 Box.prototype.updateCoordinates = function(x,y){
 	this.x = x
 	this.y = y
-	//update all terminals coordinates
+	for(var i =0;i<this.terminals.length;i+=1)
+		this.terminalReInit = true
 	invalidate()
 }
-//function Terminal(direction)
+Box.prototype.changeStroke = function(strokeColor){
+	this.stroke = strokeColor
+}
 
 $(document).ready(function(){
 	initListeners();
@@ -101,7 +114,7 @@ function clearCanvas(){
 function draw(){
 	if(!isCanvasValid){
 		clearCanvas()
-		for(i=0;i<boxes.length;i+=1){
+		for(var i=0;i<boxes.length;i +=1){
 			boxes[i].draw()
 		}
 		isCanvasValid = true
@@ -113,9 +126,7 @@ function doesXYLieInRect(x,y,b){
 	else
 		return false
 }
-function strokeBox(box){
-	box.stroke = "rgb(0,255,0)"
-}
+
 function initListeners(){
 	$(document).keydown(function(event){
 		if(event.shiftKey)
@@ -149,12 +160,9 @@ function initListeners(){
 			boxes[i].stroke = black
 		}
 		if(dragBox != null){
-			strokeBox(dragBox)
-			invalidate()
-		}
-		else
-			invalidate()
-		
+			dragBox.changeStroke(green)
+		}		
+		invalidate()		
 	})
 	$("canvas").mouseup(function(event){
 		mouseDown = false
@@ -192,9 +200,8 @@ function initListeners(){
 			t = new Terminal(b, direction.output,i)
 			b.addTerminal(t)
 		}
-		
 		boxes.push(b)
-		b.draw()
+		invalidate()
 	})
 	
 }
