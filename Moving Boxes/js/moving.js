@@ -2,7 +2,7 @@ var context, canvas, HEIGHT, WIDTH
 var isCanvasValid = false
 var interval = 30
 var boxWidth, boxHeight
-boxWidth = boxHeight = 30
+boxWidth = boxHeight = 40
 //Mouse moving events
 var mouseDown = false, dragBox, dragX, dragY, boxMove = 1, boxShift = 5
 var black = "rgb(0,0,0)" , green="#00ff00", blue = "#0000ff"
