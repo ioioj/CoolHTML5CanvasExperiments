@@ -14,6 +14,9 @@ var direction = {input:0, output: 1}
 
 var boxes = []
 
+/* Terminl class, represent a point on the edge of a box.
+ * Currently, not being used. 
+ */
 function Terminal(box, direction, index){
 	this.box = box
 	this.index = index
@@ -39,6 +42,9 @@ Terminal.prototype.draw = function(){
 }
 
 
+/* Box class, represents the square box on the canvas!
+ * These are the moveabe elements on the canvas
+ */
 function Box(x,y,w,h, fill,stroke){
 	this.x = x
 	this.y = y
